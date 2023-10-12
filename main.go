@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"html/template"
@@ -169,7 +170,25 @@ func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
 		filepath := path + filename
 
 		// Create file
-		dst, err := os.Create(downloadPath + filename)
+		possibleDownloadFilePath := downloadPath + filename
+		// Cover file extension
+		j := len(possibleDownloadFilePath) - 1
+		for j >= 0 && possibleDownloadFilePath[j] != []byte(".")[0] {
+			j -= 1
+		}
+		downloadFilePath := possibleDownloadFilePath
+		_, err := os.Stat(downloadFilePath)
+		i := 1
+		for !errors.Is(err, os.ErrNotExist) {
+			if j > 0 {
+				downloadFilePath = possibleDownloadFilePath[:j] + "(" + strconv.Itoa(i) + ")" + possibleDownloadFilePath[j:]
+			} else {
+				downloadFilePath = possibleDownloadFilePath + "(" + strconv.Itoa(i) + ")"
+			}
+			_, err = os.Stat(downloadFilePath)
+			i += 1
+		}
+		dst, err := os.Create(downloadFilePath)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
