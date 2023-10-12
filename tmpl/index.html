@@ -1,0 +1,58 @@
+<html>
+	<table class="table">
+        <thead>
+		<th>{{ .Name }}</th>
+        </thead>
+		<tbody>
+		<td>
+			<form action="/createFolder" method="POST"> 
+				<button name="path" type="submit" value={{ .Path }} class="btn">Create Folder</button>
+			</form>
+		</td>
+		<td>
+			<form enctype="multipart/form-data" action="/uploadFile" method="POST">
+      			<input type="file" name="myFile" />
+				<input type="submit" value="upload" />
+				<input type="hidden" name="path" value= {{ .Path }}>
+    		</form>
+		</td>
+   		{{ range $v := .SubItems}}
+		<tr>
+		{{ if .IsFolder }}
+		<td><a href = {{ $v.Path }}> {{ $v.Name }}</a></td>
+		<td>
+			<form action="/changeFolderName" method="post">
+				<input type="text" name="folderName"/>
+				<input type="hidden" name="folderPath" value={{ $v.Path }}>
+				<input type="submit" value="Rename"/>
+			</form>
+		</td>
+		{{ else }}
+		<td>{{ $v.Name }}</td>
+		<td>
+			<form action="/deleteFile" method="POST">
+				<input type="hidden" name="filename" value={{ $v.Name }}>
+				<button name="path" type="submit" value={{ $v.Path }} class="btn">Delete</button>
+			</form>
+		</td>
+		<td>
+			<form action="/downloadFile" method="POST">
+				<input type="hidden" name="filename" value={{ $v.Name }}>
+				<button name="path" type="submit" value={{ $v.Path }} class="btn">Download</button>
+			</form>
+		</td>
+		<td>
+			<form action="/changeFileName" method="post">
+				<input type="text" name="fileName"/>
+				<input type="hidden" name="oldFileName" value={{ $v.Name }}>
+				<input type="hidden" name="filePath" value={{ $v.Path }}>
+				<input type="submit" value="Rename"/>
+			</form>
+		</td>
+		{{ end }}
+		</tr>
+     	{{end}}
+		</tbody>
+	</table>
+</html>
+
