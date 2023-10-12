@@ -190,6 +190,20 @@ func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		page.deleteFile(filename)
+
+		// Take hash
+		filePath := path + filename
+		fileDataPath := dataPath + strconv.FormatUint(uint64(bonds[filePath]), 10)
+		// Delete from hash table
+		delete(bonds, filePath)
+
+		// Delete from data
+		err := os.Remove(fileDataPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		redirect(w, r, page)
 	default:
 		renderTemplate(w, "index", pages)
@@ -224,11 +238,25 @@ func changeFileNameHandler(w http.ResponseWriter, r *http.Request) {
 		filePath := r.FormValue("filePath")
 		newFileName := r.FormValue("fileName")
 		oldFileName := r.FormValue("oldFileName")
-		fmt.Println(newFileName, oldFileName, filePath)
 		page := getPageFromPath(filePath)
-		fmt.Println(page)
 		page.changeFileName(newFileName, oldFileName)
-		fmt.Println(page)
+
+		// Change name in bond
+		oldFilePath := filePath + oldFileName
+		filePath += newFileName
+		fmt.Println(hash(oldFilePath), hash(oldFilePath))
+		oldHash := bonds[oldFilePath]
+		bonds[filePath] = hash(filePath)
+
+		// Change name in data
+		newHashToString := strconv.FormatUint(uint64(bonds[filePath]), 10)
+		oldHashToString := strconv.FormatUint(uint64(oldHash), 10)
+		err := os.Rename(dataPath+oldHashToString, dataPath+newHashToString)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		redirect(w, r, page)
 	}
 }
@@ -313,6 +341,7 @@ func (p *Page) addNewFolder() {
 	p.SubItems = append(p.SubItems, Page{Name: name, IsFolder: true, Path: p.Path + name + "/"})
 }
 
+// TODO check if file exist
 func (p *Page) addNewFile(name string) {
 	p.SubItems = append(p.SubItems, Page{Name: name, IsFolder: false, Path: p.Path})
 }
