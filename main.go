@@ -73,6 +73,25 @@ func begin() error {
 	if err := os.Mkdir(downloadPath, os.ModePerm); err != nil {
 		return err
 	}
+
+	// Create demo files
+	filePath := "/files/"
+	filename := "file.txt"
+	hashFilename := strconv.FormatUint(uint64(hash(filePath+filename)), 10)
+	file, err := os.Create(dataPath + hashFilename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	filePath = "/files/Loli/"
+	hashFilename = strconv.FormatUint(uint64(hash(filePath+filename)), 10)
+	file1, err := os.Create(dataPath + hashFilename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file1.Close()
+
 	return nil
 }
 
