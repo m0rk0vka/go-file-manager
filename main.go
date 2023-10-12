@@ -1,5 +1,3 @@
-//go:build ignore
-
 package main
 
 import (
@@ -118,10 +116,10 @@ func showFolderHandler(w http.ResponseWriter, r *http.Request, page *Page) {
 }
 
 func redirect(w http.ResponseWriter, r *http.Request, p *Page) {
-	r.Method = http.MethodGet
-	r.URL.Path = p.Path
-	http.Redirect(w, r, p.Path, http.StatusCreated)
-
+	//r.Method = http.MethodGet
+	//r.URL.Path = p.Path
+	http.Redirect(w, r, p.Path, http.StatusFound)
+	log.Println("Successfully redirected")
 }
 
 func createFolderHandler(w http.ResponseWriter, r *http.Request) {
