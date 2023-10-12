@@ -173,7 +173,6 @@ func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: delete from hash map and from data
 func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
@@ -227,7 +226,6 @@ func changeFolderNameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO change name in bond
 func changeFileNameHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
@@ -239,19 +237,21 @@ func changeFileNameHandler(w http.ResponseWriter, r *http.Request) {
 		newFileName := r.FormValue("fileName")
 		oldFileName := r.FormValue("oldFileName")
 		page := getPageFromPath(filePath)
-		page.changeFileName(newFileName, oldFileName)
-
+		err := page.changeFileName(newFileName, oldFileName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		// Change name in bond
 		oldFilePath := filePath + oldFileName
 		filePath += newFileName
-		fmt.Println(hash(oldFilePath), hash(oldFilePath))
 		oldHash := bonds[oldFilePath]
 		bonds[filePath] = hash(filePath)
 
 		// Change name in data
 		newHashToString := strconv.FormatUint(uint64(bonds[filePath]), 10)
 		oldHashToString := strconv.FormatUint(uint64(oldHash), 10)
-		err := os.Rename(dataPath+oldHashToString, dataPath+newHashToString)
+		err = os.Rename(dataPath+oldHashToString, dataPath+newHashToString)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -341,9 +341,34 @@ func (p *Page) addNewFolder() {
 	p.SubItems = append(p.SubItems, Page{Name: name, IsFolder: true, Path: p.Path + name + "/"})
 }
 
-// TODO check if file exist
 func (p *Page) addNewFile(name string) {
-	p.SubItems = append(p.SubItems, Page{Name: name, IsFolder: false, Path: p.Path})
+	n := name
+	i := 1
+	if p.isFileExist(n) {
+		n = n + " (" + strconv.Itoa(i) + ")"
+	}
+	for p.isFileExist(n) {
+		i += 1
+		j := len(n) - 1
+		for j >= 0 && n[j] != []byte(" ")[0] {
+			j -= 1
+		}
+
+		n = n[:j] + " (" + strconv.Itoa(i) + ")"
+	}
+
+	p.SubItems = append(p.SubItems, Page{Name: n, IsFolder: false, Path: p.Path})
+}
+
+func (p *Page) isFileExist(name string) bool {
+	answer := false
+	for _, item := range p.SubItems {
+		if item.Name == name {
+			answer = true
+		}
+	}
+
+	return answer
 }
 
 func (p *Page) changeName(name string) {
@@ -351,11 +376,13 @@ func (p *Page) changeName(name string) {
 	p.Path = p.getRootPath() + name + "/"
 }
 
-func (p *Page) changeFileName(new, old string) {
-	fmt.Println("Items:")
+func (p *Page) changeFileName(new, old string) error {
+	if p.isFileExist(new) {
+		return fmt.Errorf("Duplicate file name %v\n", new)
+	}
+
 	index := -1
 	for ind, item := range p.SubItems {
-		fmt.Println(item)
 		if !item.IsFolder && item.Name == old {
 			index = ind
 		}
@@ -363,7 +390,11 @@ func (p *Page) changeFileName(new, old string) {
 
 	if index != -1 {
 		p.SubItems[index].Name = new
+	} else {
+		return fmt.Errorf("Can't change file name %v to %v\n", old, new)
 	}
+
+	return nil
 }
 
 func (p *Page) getRootPath() string {
