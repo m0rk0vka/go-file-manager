@@ -92,6 +92,7 @@ func begin() error {
 	}
 	defer file1.Close()
 
+	log.Println("Successfully recreated demo")
 	return nil
 }
 
@@ -108,6 +109,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+	log.Println("Successfully render template")
 }
 
 func showFolderHandler(w http.ResponseWriter, r *http.Request, page *Page) {
@@ -140,6 +142,7 @@ func createFolderHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		renderTemplate(w, "index", pages)
 	}
+	log.Println("Successfully created folder")
 }
 
 func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -149,6 +152,7 @@ func uploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		renderTemplate(w, "index", pages)
 	}
+	log.Println("Successfully uploaded file")
 }
 
 func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -190,6 +194,7 @@ func downloadFileHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		renderTemplate(w, "index", pages)
 	}
+	log.Println("Successfully downloaded file")
 }
 
 func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +231,7 @@ func deleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		renderTemplate(w, "index", pages)
 	}
+	log.Println("Successfully deleted file")
 }
 
 func changeFolderNameHandler(w http.ResponseWriter, r *http.Request) {
@@ -243,6 +249,7 @@ func changeFolderNameHandler(w http.ResponseWriter, r *http.Request) {
 		page = getPageFromPath(rootPath)
 		redirect(w, r, page)
 	}
+	log.Println("Successfully changed folder name")
 }
 
 func changeFileNameHandler(w http.ResponseWriter, r *http.Request) {
@@ -278,6 +285,7 @@ func changeFileNameHandler(w http.ResponseWriter, r *http.Request) {
 
 		redirect(w, r, page)
 	}
+	log.Println("Successfully changed file name")
 }
 func uploadFile(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20)
@@ -291,10 +299,6 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer file.Close()
-
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -437,7 +441,6 @@ func (p *Page) deleteFile(name string) {
 }
 
 func getPageFromPath(path string) *Page {
-	fmt.Println(path)
 	if !checkBeginPath(path) {
 		return nil
 	}
@@ -472,7 +475,6 @@ func getPageFromPath(path string) *Page {
 		// add 1, cause we need to move the slesh
 		i += 1
 	}
-	fmt.Println(p.Name, p.SubItems)
 	return p
 }
 
