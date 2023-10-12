@@ -9,7 +9,7 @@ Without authorization and saving data when restarting the server.
 2. Create folders
 3. Interactive folder
 4. Rename files/folders
-5. Download files
+5. Download files (to ./download dir)
 
 ## Build  
 ```
